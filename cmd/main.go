@@ -4,14 +4,19 @@ import (
 	"fmt"
 	"net/http"
 	"test_api_go/configs"
+	"test_api_go/internal/enrichment"
 	"test_api_go/internal/person"
 )
 
 func main() {
 	conf := configs.LoadConfig()
 	router := http.NewServeMux()
+
+	enricher := enrichment.NewEnrichmentService()
+
 	person.NewPersonHandler(router, person.PersonHandlerDeps{
-		Config: conf,
+		Config:   conf,
+		Enricher: enricher,
 	})
 
 	server := http.Server{

@@ -5,19 +5,23 @@ import (
 	"fmt"
 	"net/http"
 	"test_api_go/configs"
+	"test_api_go/internal/enrichment"
 )
 
 type PersonHandlerDeps struct {
 	*configs.Config
+	Enricher enrichment.EnrichmentService
 }
 
 type PersonHandler struct {
 	*configs.Config
+	Enricher enrichment.EnrichmentService
 }
 
 func NewPersonHandler(router *http.ServeMux, deps PersonHandlerDeps) {
 	handler := &PersonHandler{
-		Config: deps.Config,
+		Config:   deps.Config,
+		Enricher: deps.Enricher,
 	}
 	router.HandleFunc("POST /person", handler.Create())
 	router.HandleFunc("DELETE /person/{id}", handler.Delete())
@@ -47,11 +51,19 @@ func (handler *PersonHandler) Create() http.HandlerFunc {
 			return
 		}
 
+		// обогащение
+		age, err := handler.Enricher.GetAge(input.Name)
+		if err != nil {
+			http.Error(w, "Faild to enrich age", http.StatusInternalServerError)
+			return
+		}
+
 		response := PersonResponse{
 			ID:         1,
 			Name:       input.Name,
 			Surname:    input.Surname,
 			Patronymic: input.Patronymic,
+			Age:        age,
 		}
 
 		w.Header().Set("Content-Type", "application/json")
