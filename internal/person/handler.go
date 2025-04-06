@@ -37,9 +37,13 @@ func (handler *PersonHandler) Create() http.HandlerFunc {
 			return
 		}
 
-		// валидация поля name и surname (patronymic не будем валидировать)
-		if input.Name == "" || input.Surname == "" {
-			http.Error(w, "Name and surname must be", http.StatusBadRequest)
+		// явная валидация полей
+		switch {
+		case input.Name == "":
+			http.Error(w, "Field 'name' is required", http.StatusBadRequest)
+			return
+		case input.Surname == "":
+			http.Error(w, "Field 'surname' is required", http.StatusBadRequest)
 			return
 		}
 
