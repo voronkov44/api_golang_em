@@ -54,16 +54,28 @@ func (handler *PersonHandler) Create() http.HandlerFunc {
 		// обогащение
 		age, err := handler.Enricher.GetAge(input.Name)
 		if err != nil {
-			http.Error(w, "Faild to enrich age", http.StatusInternalServerError)
+			http.Error(w, "Failed to enrich age", http.StatusInternalServerError)
+			return
+		}
+		gender, err := handler.Enricher.GetGender(input.Name)
+		if err != nil {
+			http.Error(w, "Failed to enrich gender", http.StatusInternalServerError)
+			return
+		}
+		nationality, err := handler.Enricher.GetNationality(input.Name)
+		if err != nil {
+			http.Error(w, "Failed to enrich nationality", http.StatusInternalServerError)
 			return
 		}
 
 		response := PersonResponse{
-			ID:         1,
-			Name:       input.Name,
-			Surname:    input.Surname,
-			Patronymic: input.Patronymic,
-			Age:        age,
+			ID:          1,
+			Name:        input.Name,
+			Surname:     input.Surname,
+			Patronymic:  input.Patronymic,
+			Age:         age,
+			Gender:      gender,
+			Nationality: nationality,
 		}
 
 		w.Header().Set("Content-Type", "application/json")
