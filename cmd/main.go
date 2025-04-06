@@ -6,10 +6,12 @@ import (
 	"test_api_go/configs"
 	"test_api_go/internal/enrichment"
 	"test_api_go/internal/person"
+	"test_api_go/pkg/db"
 )
 
 func main() {
 	conf := configs.LoadConfig()
+	_ = db.NewDb(conf)
 	router := http.NewServeMux()
 
 	enricher := enrichment.NewEnrichmentService()
