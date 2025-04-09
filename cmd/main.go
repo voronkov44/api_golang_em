@@ -2,17 +2,26 @@ package main
 
 import (
 	"fmt"
+	httpSwagger "github.com/swaggo/http-swagger"
 	"net/http"
 	"test_api_go/configs"
+	_ "test_api_go/docs"
 	"test_api_go/internal/enrichment"
 	"test_api_go/internal/person"
 	"test_api_go/pkg/db"
 )
 
+// @title People API
+// @version 1.0
+// @description API для управления людьми с обогащением данных
+// @host localhost:8081
+// @BasePath /
 func main() {
 	conf := configs.LoadConfig()
 	database := db.NewDb(conf)
 	router := http.NewServeMux()
+
+	router.HandleFunc("/swagger/", httpSwagger.WrapHandler)
 
 	enricher := enrichment.NewEnrichmentService()
 

@@ -35,6 +35,17 @@ func NewPersonHandler(router *http.ServeMux, deps PersonHandlerDeps) {
 	router.HandleFunc("PATCH /person/{id}", handler.Update())
 }
 
+// Create godoc
+// @Summary Создать новую запись о человеке
+// @Description Добавляет человека в БД с обогащением данных (возраст, пол, национальность)
+// @Tags people
+// @Accept json
+// @Produce json
+// @Param input body person.PersonCreateRequest true "Данные человека"
+// @Success 201 {object} person.PersonResponse
+// @Failure 400 {string} string "Неверный JSON"
+// @Failure 500 {string} string "Ошибка сервера"
+// @Router /person [post]
 func (handler *PersonHandler) Create() http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
 		var input PersonCreateRequest
@@ -104,6 +115,15 @@ func (handler *PersonHandler) Create() http.HandlerFunc {
 	}
 }
 
+// Delete godoc
+// @Summary Удалить человека
+// @Description Удаляет запись о человеке из БД
+// @Tags people
+// @Param id path int true "ID человека"
+// @Success 200
+// @Failure 400 {string} string "Неверный ID"
+// @Failure 404 {string} string "Человек не найден"
+// @Router /person/{id} [delete]
 func (handler *PersonHandler) Delete() http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
 		idStr := req.PathValue("id")
@@ -133,6 +153,16 @@ func (handler *PersonHandler) Delete() http.HandlerFunc {
 	}
 }
 
+// GoTo godoc
+// @Summary Получить человека по ID
+// @Description Возвращает данные конкретного человека
+// @Tags people
+// @Produce json
+// @Param id path int true "ID человека"
+// @Success 200 {object} person.PersonResponse
+// @Failure 400 {string} string "Неверный ID"
+// @Failure 404 {string} string "Человек не найден"
+// @Router /person/{id} [get]
 func (handler *PersonHandler) GoTo() http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
 		idStr := req.PathValue("id")
@@ -174,6 +204,14 @@ func (handler *PersonHandler) GoTo() http.HandlerFunc {
 	}
 }
 
+// GetAll godoc
+// @Summary Получить список людей
+// @Description Возвращает всех людей из БД
+// @Tags people
+// @Produce json
+// @Success 200 {array} person.PersonResponse
+// @Failure 500 {string} string "Ошибка сервера"
+// @Router /person [get]
 func (handler *PersonHandler) GetAll() http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
 		var persons []Person
@@ -201,6 +239,18 @@ func (handler *PersonHandler) GetAll() http.HandlerFunc {
 	}
 }
 
+// Update godoc
+// @Summary Обновить данные человека
+// @Description Изменяет данные человека (частичное обновление)
+// @Tags people
+// @Accept json
+// @Produce json
+// @Param id path int true "ID человека"
+// @Param input body person.PersonUpdateRequest true "Новые данные"
+// @Success 200 {object} person.PersonResponse
+// @Failure 400 {string} string "Неверный запрос"
+// @Failure 404 {string} string "Человек не найден"
+// @Router /person/{id} [patch]
 func (handler *PersonHandler) Update() http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
 		idStr := req.PathValue("id")
