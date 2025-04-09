@@ -11,7 +11,7 @@ import (
 
 func main() {
 	conf := configs.LoadConfig()
-	_ = db.NewDb(conf)
+	database := db.NewDb(conf)
 	router := http.NewServeMux()
 
 	enricher := enrichment.NewEnrichmentService()
@@ -19,6 +19,7 @@ func main() {
 	person.NewPersonHandler(router, person.PersonHandlerDeps{
 		Config:   conf,
 		Enricher: enricher,
+		DB:       database.DB,
 	})
 
 	server := http.Server{
