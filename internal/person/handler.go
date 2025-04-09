@@ -5,7 +5,9 @@ import (
 	"errors"
 	"fmt"
 	"gorm.io/gorm"
+	"math"
 	"net/http"
+	"strconv"
 	"test_api_go/configs"
 	"test_api_go/internal/enrichment"
 )
@@ -206,19 +208,72 @@ func (handler *PersonHandler) GoTo() http.HandlerFunc {
 
 // GetAll godoc
 // @Summary Получить список людей
-// @Description Возвращает всех людей из БД
+// @Description Возвращает список людей с пагинацией и фильтрацией
 // @Tags people
 // @Produce json
-// @Success 200 {array} person.PersonResponse
+// @Param page query int false "Номер страницы" default(1)
+// @Param limit query int false "Лимит записей" default(10)
+// @Param name query string false "Фильтр по имени"
+// @Param surname query string false "Фильтр по фамилии"
+// @Param age query int false "Фильтр по возрасту"
+// @Param gender query string false "Фильтр по полу"
+// @Param nationality query string false "Фильтр по национальности"
+// @Success 200 {object} map[string]interface{} "data: список людей, meta: метаданные пагинации"
 // @Failure 500 {string} string "Ошибка сервера"
 // @Router /person [get]
 func (handler *PersonHandler) GetAll() http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
-		var persons []Person
-		if err := handler.DB.Find(&persons).Error; err != nil {
+		page, _ := strconv.Atoi(req.URL.Query().Get("page"))
+		if page <= 0 {
+			page = 1
+		}
+
+		limit, _ := strconv.Atoi(req.URL.Query().Get("limit"))
+		switch {
+		case limit > 100:
+			limit = 100
+		case limit <= 0:
+			limit = 10
+		}
+
+		offset := (page - 1) * limit
+
+		name := req.URL.Query().Get("name")
+		surname := req.URL.Query().Get("surname")
+		age, _ := strconv.Atoi(req.URL.Query().Get("age"))
+		gender := req.URL.Query().Get("gender")
+		nationality := req.URL.Query().Get("nationality")
+
+		query := handler.DB.Model(&Person{})
+
+		if name != "" {
+			query = query.Where("name LIKE ?", "%"+name+"%")
+		}
+		if surname != "" {
+			query = query.Where("surname LIKE ?", "%"+surname+"%")
+		}
+		if age > 0 {
+			query = query.Where("age = ?", age)
+		}
+		if gender != "" {
+			query = query.Where("gender = ?", gender)
+		}
+		if nationality != "" {
+			query = query.Where("nationality = ?", nationality)
+		}
+
+		var total int64
+		if err := query.Count(&total).Error; err != nil {
 			http.Error(w, "Database error", http.StatusInternalServerError)
 			return
 		}
+
+		var persons []Person
+		if err := query.Offset(offset).Limit(limit).Find(&persons).Error; err != nil {
+			http.Error(w, "Database error", http.StatusInternalServerError)
+			return
+		}
+
 		response := make([]PersonResponse, len(persons))
 		for i, person := range persons {
 			response[i] = PersonResponse{
@@ -231,11 +286,17 @@ func (handler *PersonHandler) GetAll() http.HandlerFunc {
 				Nationality: person.Nationality,
 			}
 		}
-
+		
 		w.Header().Set("Content-Type", "application/json")
-		if err := json.NewEncoder(w).Encode(response); err != nil {
-			http.Error(w, "Failed to encode response", http.StatusInternalServerError)
-		}
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"data": response,
+			"meta": map[string]interface{}{
+				"total":     total,
+				"page":      page,
+				"limit":     limit,
+				"last_page": int(math.Ceil(float64(total) / float64(limit))),
+			},
+		})
 	}
 }
 
