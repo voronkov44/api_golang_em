@@ -176,12 +176,97 @@ func (handler *PersonHandler) GoTo() http.HandlerFunc {
 
 func (handler *PersonHandler) GetAll() http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
-		fmt.Println("GetAll Person")
+		var persons []Person
+		if err := handler.DB.Find(&persons).Error; err != nil {
+			http.Error(w, "Database error", http.StatusInternalServerError)
+			return
+		}
+		response := make([]PersonResponse, len(persons))
+		for i, person := range persons {
+			response[i] = PersonResponse{
+				ID:          person.ID,
+				Name:        person.Name,
+				Surname:     person.Surname,
+				Patronymic:  person.Patronymic,
+				Age:         person.Age,
+				Gender:      person.Gender,
+				Nationality: person.Nationality,
+			}
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		if err := json.NewEncoder(w).Encode(response); err != nil {
+			http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+		}
 	}
 }
 
 func (handler *PersonHandler) Update() http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
-		fmt.Println("Update Person")
+		idStr := req.PathValue("id")
+		if idStr == "" {
+			http.Error(w, "ID is required", http.StatusBadRequest)
+			return
+		}
+
+		var personId int64
+		if _, err := fmt.Sscanf(idStr, "%d", &personId); err != nil {
+			http.Error(w, "Invalid ID format", http.StatusBadRequest)
+			return
+		}
+
+		var input PersonUpdateRequest
+		if err := json.NewDecoder(req.Body).Decode(&input); err != nil {
+			http.Error(w, "Invalid request body", http.StatusBadRequest)
+			return
+		}
+
+		var person Person
+		if err := handler.DB.First(&person, personId).Error; err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				http.Error(w, "Person not found", http.StatusNotFound)
+			} else {
+				http.Error(w, "Database error", http.StatusInternalServerError)
+			}
+			return
+		}
+
+		if input.Name != "" {
+			person.Name = input.Name
+		}
+		if input.Surname != "" {
+			person.Surname = input.Surname
+		}
+		if input.Patronymic != "" {
+			person.Patronymic = input.Patronymic
+		}
+		if input.Age > 0 {
+			person.Age = input.Age
+		}
+		if input.Gender != "" {
+			person.Gender = input.Gender
+		}
+		if input.Nationality != "" {
+			person.Nationality = input.Nationality
+		}
+
+		if err := handler.DB.Save(&person).Error; err != nil {
+			http.Error(w, "Database error", http.StatusInternalServerError)
+		}
+
+		response := PersonResponse{
+			ID:          person.ID,
+			Name:        person.Name,
+			Surname:     person.Surname,
+			Patronymic:  person.Patronymic,
+			Age:         person.Age,
+			Gender:      person.Gender,
+			Nationality: person.Nationality,
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		if err := json.NewEncoder(w).Encode(response); err != nil {
+			http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+		}
 	}
 }
