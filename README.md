@@ -16,7 +16,7 @@ REST API сервис для управления людьми с автомат
 git clone https://github.com/voronkov44/api_golang_em.git
 ```
 ### 2. Настройка окружения 
-Требуется установка базы данных [PostgreSQL](https://www.postgresql.org/), если не установлен, смотрите [зависимости](https://github.com/voronkov44/api_golang_em/edit/main/README.md#%D0%B7%D0%B0%D0%B2%D0%B8%D1%81%D0%B8%D0%BC%D0%BE%D1%81%D1%82%D0%B8)
+Требуется установка базы данных [PostgreSQL](https://www.postgresql.org/), если не установлен, смотрите [зависимости](https://github.com/voronkov44/api_golang_em?tab=readme-ov-file#%D0%B7%D0%B0%D0%B2%D0%B8%D1%81%D0%B8%D0%BC%D0%BE%D1%81%D1%82%D0%B8)
 
 Создайте файл .env в корне проекта:
 
