@@ -286,7 +286,7 @@ func (handler *PersonHandler) GetAll() http.HandlerFunc {
 				Nationality: person.Nationality,
 			}
 		}
-		
+
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(map[string]interface{}{
 			"data": response,
